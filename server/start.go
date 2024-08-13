@@ -39,6 +39,7 @@ import (
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	servergrpc "github.com/cosmos/cosmos-sdk/server/grpc"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -515,17 +516,17 @@ func startGrpcServer(
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
 	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
 
-	// grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
-	// if err != nil {
-	// 	return nil, clientCtx, err
-	// }
+	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
+	if err != nil {
+		return nil, clientCtx, err
+	}
 
-	// // Start the gRPC server in a goroutine. Note, the provided ctx will ensure
-	// // that the server is gracefully shut down.
-	// g.Go(func() error {
-	// 	return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
-	// })
-	return &grpc.Server{}, clientCtx, nil
+	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
+	// that the server is gracefully shut down.
+	g.Go(func() error {
+		return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
+	})
+	return grpcSrv, clientCtx, nil
 }
 
 func startAPIServer(
